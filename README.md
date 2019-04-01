@@ -15,5 +15,5 @@
 * Due date: last week of April
 * Submission: Explain what we have done, and plot the precision x recall curves (one page max.)
 * Work in pairs
-
+* Bull's Eye Score: Recall at the first 20 retrieved images.
 
