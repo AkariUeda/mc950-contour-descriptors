@@ -196,7 +196,6 @@ Image *AddFrame(Image *img, int sz, int value)
 
   fimg = CreateImage(img->ncols+(2*sz),img->nrows+(2*sz));
   SetImage(fimg,value);
-  nbytes = sizeof(int)*img->ncols;
   offset = sz+fimg->tbrow[sz];
   for (y=0,src=img->val,dst=fimg->val+offset; y < img->nrows;y++,src+=img->ncols,dst+=fimg->ncols){
     memcpy(dst,src,nbytes);
@@ -3578,7 +3577,7 @@ float *TSOrientationHistogram(TensorScale *ts){
   hist[0] += hist[HISTOGRAMSIZE];
   hist[HISTOGRAMSIZE] = 0.0;
 
-  //Normalizaçao do histograma
+  //Normalizaï¿½ao do histograma
   sum = 0.0;
   for(i=0;i<HISTOGRAMSIZE;i++)
     sum += hist[i];

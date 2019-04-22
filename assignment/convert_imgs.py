@@ -45,6 +45,7 @@ for file in os.listdir(directory):
     im_out = im_in | im_floodfill_inv
 
     im_out = Image.fromarray(np.uint8(cm.gist_earth(im_out)*255))
-    im_out = im_out.convert('RGB')
+    # im_out = Image.fromarray((im_out * 255).astype(np.uint8))
+    im_out = im_out.convert('L')
     # plt.imshow( im_out, cmap='gray')
     im_out.save('jpeg_imgs/' + file[:-4] + '.jpeg')
