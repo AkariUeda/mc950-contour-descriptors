@@ -1,32 +1,72 @@
 #include "MO445.h"
 #include <stdio.h>
+#include<string.h>
+
+int cmpfunc (const void * a, const void * b) {
+   return ( *(double*)b - *(double*)a );
+}
+
 
 int main(int argc,char **argv){
 	fprintf(stderr,"\nInstructions: ");
 	fprintf(stderr,"\nFor the shape descriptors (Moments Invariant, Fourier Descriptor, BAS Descriptor abd Tensor Scale Descriptor) the image \nneeds to be in binary format (0 - background 1 - object)\n");
-	char *filename;
+	char *filename = NULL,*dir_name = NULL, aux_file[100];
+	unsigned int len;
+	FILE * fractals_file,  *saliences_file;
+
 	Image *img1 = NULL;
 	FeatureVector1D	*fvMS1 = NULL, *fvMS2 = NULL;
 	FeatureVector1D *fvSS1 = NULL, *fvSS2 = NULL;
-	FeatureVector1D **features;
-	features = calloc(1400,sizeof(FeatureVector1D*);
-	int i;
+	FeatureVector1D **fractals, **saliences;
+	fractals = calloc(1400,sizeof(FeatureVector1D*));
+	saliences = calloc(1400,sizeof(FeatureVector1D*));
+	char name[1400][30];
+	int i = 0,j, n=0;
+	fprintf(stderr,"Extracting Multiscale Fractal Dimension and Segment Saliences...\n");
+	fractals_file = fopen ("fractals.txt","w");
+	saliences_file = fopen ("saliences.txt","w");
 
-	while(scanf("%s\n", &filename) != EOF){
-		printf("%s\n", filename);
+	dir_name = argv[1];
+	printf("%s\n", dir_name);
+	while(getline(&filename, &len, stdin) != EOF){
+		filename[strlen(filename)-1] = '\0';
+		strcpy(name[i], filename);
+		strcpy(aux_file,dir_name);
+		strcat(aux_file, "/");
+		strcat(aux_file, filename);
+
+		printf("%s\n", aux_file);
+		img1 = ReadImage(aux_file);
+
+		fvMS1 = MS_ExtractionAlgorithm(img1);
+		fractals[i] = fvMS1;
+
+		fvSS1 = SS_ExtractionAlgorithm(img1);
+		saliences[i] = fvSS1;
+
+		DestroyImage(&img1);
+		i++;
 	}
-	// img1 = ReadImage(argv[1]);
-	// img2 = ReadImage("figs/mpeg7-bird.pgm");
-		
-	// fprintf(stderr,"\nExtracting Multiscale Fractal Dimension ... ");
-	// fvMS1 = MS_ExtractionAlgorithm(img1);
-	// WriteFeatureVector1D(fvMS1, "results/multiscale_mpeg7-bat.txt");
+	n = i;
+	for(i=0;i<n;i++){
+		double fractals_dist[1400];
+		double salience_dist[1400];
 
-	// for (i=0; i < desc->n; i++)
-    // printf(fp,"%f\n",desc->X[i]);
+		for(j=0;j<n;j++){
+			fractals_dist[j] = MS_DistanceAlgorithm(fractals[i], fractals[j]);
+			salience_dist[j]= SS_DistanceAlgorithm(saliences[i], saliences[j]);
+		}
+		qsort(fractals_dist, n, sizeof(double),cmpfunc );
+		qsort(salience_dist, n, sizeof(double),cmpfunc );
+		for(j=0;j<n;j++){
+			fprintf(fractals_file, "%s Q0 %s %d %lf STANDARD\n", name[i], name[j], j+1, fractals_dist[j]);
+
+			fprintf(saliences_file, "%s Q0 %s %d %lf STANDARD\n", name[i], name[j], j+1, salience_dist[j]);	
+		}
+	}
+	
 
 	// fprintf(stderr,"\nExtracting Segment Saliences ... ");
-	// fvSS1 = SS_ExtractionAlgorithm(img1);
 	// WriteFeatureVector1D(fvSS1, "results/segmentsaliences_mpeg7-bat.txt");
 
 	// fprintf(stderr,"\nExtracting Multiscale Fractal Dimension ... ");
@@ -42,7 +82,7 @@ int main(int argc,char **argv){
 	// fprintf(stderr,"%lf",Fourier_DistanceAlgorithm(fvMS1, fvMS2));
 
 
-	// DestroyCImage(&cimg1);	DestroyImage(&img1);
+	// DestroyCImage(&cimg1);	
 	// DestroyCImage(&cimg2);	DestroyImage(&img2);
 	// DestroyFeatureVector1D(&fvBIC1); DestroyFeatureVector1D(&fvBIC2);
 	// DestroyFeatureVector1D(&fvMoments1); DestroyFeatureVector1D(&fvMoments2);

@@ -1,0 +1,3 @@
+apple-5.pgm
+mpeg7-bat.pgm
+mpeg7-bird.pgm

@@ -1,0 +1,9 @@
+apple-5.pgm Q0 apple-5.pgm 1 5.526674 STANDARD
+apple-5.pgm Q0 mpeg7-bat.pgm 2 6.024917 STANDARD
+apple-5.pgm Q0 mpeg7-bird.pgm 3 0.000000 STANDARD
+mpeg7-bat.pgm Q0 apple-5.pgm 1 5.526674 STANDARD
+mpeg7-bat.pgm Q0 mpeg7-bat.pgm 2 1.335112 STANDARD
+mpeg7-bat.pgm Q0 mpeg7-bird.pgm 3 0.000000 STANDARD
+mpeg7-bird.pgm Q0 apple-5.pgm 1 6.024917 STANDARD
+mpeg7-bird.pgm Q0 mpeg7-bat.pgm 2 1.335112 STANDARD
+mpeg7-bird.pgm Q0 mpeg7-bird.pgm 3 0.000000 STANDARD

@@ -9,6 +9,6 @@ all: libMO445 test
 libMO445:
 	$(MAKE) -C ../
 test: libMO445 
-	$(CC) $(FLAGS) $(MO445FLAGS) test.c $(MO445LIB) -o MO445.so -lMO445 -lm
+	$(CC) $(FLAGS) $(MO445FLAGS) test.c $(MO445LIB) -o test -lMO445 -lm -g
 clean:
 	rm -f *~ test.o test ../lib/*.a ../obj/*.o
