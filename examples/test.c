@@ -15,23 +15,14 @@ bool been[1500][1500];
 // Cria os vetor de distancias
 distance distances[1400];
 
-int cmpfractals (const void * a, const void * b) {
-	const struct distance *da = a, *db = b;
-	return ( db->fractals_dist - da->fractals_dist );
-}
-
-int cmpsaliences (const void * a, const void * b) {
-	const struct distance *da = a, *db = b;
-  	return ( db->salience_dist - da->salience_dist );
-}
 int main(int argc,char **argv){
 	// Variaveis e variaveis
 	char *filename = NULL, *dir_name = NULL;
 	char aux_file[100], name[1400][30];
 	unsigned int len;
 	int i = 0,j, n=0;
-	char output_fractals[1400][70];
-	char output_saliences[1400][70];
+	// char output_fractals[1400][70];
+	// char output_saliences[1400][70];
 
 	FILE *fractals_file,  *saliences_file;
 	Image *img1 = NULL;
@@ -72,14 +63,11 @@ int main(int argc,char **argv){
 		printf("i: %d\n", i);
 	}
 
-	n = i;
-	fractals_file = fopen("fractals.txt","w");
-	saliences_file = fopen("saliences.txt","w");
+	fractals_file = fopen(argv[2],"w");
+	saliences_file = fopen(argv[3],"w");
 
-
-
-
-	for(i=0;i<n;i++){
+	n = 1400;
+	for(i=atoi(argv[4]);i<atoi(argv[5]);i++){
 		// Calcula a distancia par a par
 		double max_frac = 0;
 		double max_sal = 0;
@@ -100,26 +88,21 @@ int main(int argc,char **argv){
 				max_sal = distances[j].salience_dist;
 		}
 
-
-
-		// Ordena os vetores em ordem decrescente e escreve as distancias
-		// qsort(distances, n, sizeof(distance),cmpfractals);
-		printf("%s\n", name[i]);
+		// Escreve as distancias num vetor de strings
 		for(j=0;j<n;j++){
-			sprintf(output_fractals[j], "%s Q0 %s %d %lf STANDARD\n", name[i], distances[j].name, i*n + j, 1.0-(distances[j].fractals_dist/max_frac));
+			fprintf(fractals_file, "%s Q0 %s %d %lf STANDARD\n", name[i], distances[j].name, i*n + j, 1.0-(distances[j].fractals_dist/max_frac));
 		}
-		// qsort(distances, n, sizeof(distance),cmpsaliences);
 		for(j=0;j<n;j++){
-			sprintf(output_saliences[j], "%s Q0 %s %d %lf STANDARD\n", name[i], distances[j].name, i*n + j, 1.0-(distances[j].salience_dist/max_sal));	
+			fprintf(saliences_file, "%s Q0 %s %d %lf STANDARD\n", name[i], distances[j].name, i*n + j, 1.0-(distances[j].salience_dist/max_sal));	
 		}
 	}
 
-	for(j=0;j<n;j++){
-		fprintf(fractals_file, "%s", output_fractals[j]);	
-	}
-	for(j=0;j<n;j++){
-		fprintf(saliences_file, "%s", output_saliences[j]);	
-	}
+	// for(j=0;j<n;j++){
+	// 	fprintf(fractals_file, "%s", output_fractals[j]);	
+	// }
+	// for(j=0;j<n;j++){
+	// 	fprintf(saliences_file, "%s", output_saliences[j]);	
+	// }
 	fclose(fractals_file);
 	fclose(saliences_file);
 
