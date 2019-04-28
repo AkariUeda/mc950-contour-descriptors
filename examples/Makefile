@@ -1,8 +1,8 @@
-CFLAGS = -Wall -O3
+CFLAGS = -Wall -O3 
 MO445LIB  = -L../lib
 MO445FLAGS  = -I../include
 CC=gcc
-FLAGS= -O3 -Wall
+FLAGS= -O3 -Wall -pedantic
 
 all: libMO445 test
 
