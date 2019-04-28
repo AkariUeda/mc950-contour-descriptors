@@ -5,21 +5,23 @@ from PIL import Image
 from matplotlib import cm
 import os
 import sys
+np.set_printoptions(threshold=sys.maxsize)
+
 
 directory = sys.argv[1]
 for file in os.listdir(directory):
-    filename = directory + '/' + file
+    filename =  directory + '/' + file
     im_in =Image.open(filename)
     im_in = im_in.convert('L')
+
+
     im_in = np.array(im_in)
     
     # Threshold.
     # Set values equal to or above 220 to 0.
     # Set values below 220 to 255.
     last_x = im_in.shape[0]
-    print(im_in.shape)
-    print(last_x)
-
+ 
     # Create a border to prevent images that touch the border
     # to become full white
     bordersize=10
@@ -44,7 +46,14 @@ for file in os.listdir(directory):
     # Combine the two images to get the foreground.
     im_out = im_in | im_floodfill_inv
 
-    im_out = Image.fromarray(np.uint8(cm.gist_earth(im_out)*255))
-    im_out = im_out.convert('RGB')
+    # im_out = Image.fromarray(np.uint8(cm.gist_earth(im_out)*255))
+    # im_out = im_out.convert('L')
+    # aux = np.array(im_out)
+    
+
+    im_out =  cv2.threshold(im_out, 127, 1, cv2.THRESH_BINARY)[1]
+    # print(sum(i != 0 or i != 255 for i in im_out.flatten()))
+    # print(im_out.flatten())
     # plt.imshow( im_out, cmap='gray')
-    im_out.save('jpeg_imgs/' + file[:-4] + '.jpeg')
+    # im_out.save('pgm_imgs/' + file[:-4] + '.pgm')
+    cv2.imwrite('pgm_imgs/' + file[:-4] + '.pgm',im_out)

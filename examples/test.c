@@ -1,102 +1,110 @@
 #include "MO445.h"
 #include <stdio.h>
+#include<string.h>
+#include <pthread.h> 
+
+typedef struct distance{
+	double salience_dist;
+	double fractals_dist;
+	char *name;
+}distance;
+
+distance distmat[1500][1500];
+bool been[1500][1500];
+
+// Cria os vetor de distancias
+distance distances[1400];
 
 int main(int argc,char **argv){
-	fprintf(stderr,"\nInstructions: ");
-	fprintf(stderr,"\nFor the shape descriptors (Moments Invariant, Fourier Descriptor, BAS Descriptor abd Tensor Scale Descriptor) the image \nneeds to be in binary format (0 - background 1 - object)\n");
+	// Variaveis e variaveis
+	char *filename = NULL, *dir_name = NULL;
+	char aux_file[100], name[1400][30];
+	unsigned int len;
+	int i = 0,j, n=0;
+	// char output_fractals[1400][70];
+	// char output_saliences[1400][70];
 
-	CImage *cimg1 = NULL, *cimg2 = NULL;
-	Image *img1 = NULL, *img2 = NULL;
-	FeatureVector1D *fvBIC1 = NULL, *fvBIC2 = NULL, *fvMoments1 = NULL, *fvMoments2 = NULL;
-	FeatureVector1D *fvFourier1 = NULL, *fvFourier2, *fvBAS1 = NULL, *fvBAS2 = NULL;
-	FeatureVector1D	*fvTensor1 = NULL, *fvTensor2 = NULL, *fvMS1 = NULL, *fvMS2 = NULL;
-	FeatureVector2D *fvCS1 = NULL, *fvCS2 = NULL;
-	FeatureVector1D *fvSS1 = NULL, *fvSS2 = NULL;
+	FILE *fractals_file,  *saliences_file;
+	Image *img1 = NULL;
 
-	cimg1 = ReadCImage("figs/corel-guards.ppm");
-	cimg2 = ReadCImage("figs/corel-locomotive.ppm");
-	img1 = ReadImage("figs/mpeg7-bat.pgm");
-	img2 = ReadImage("figs/mpeg7-bird.pgm");
-		
-	fprintf(stderr,"\nExtracting features from corel-guards.ppm and mpeg7-bat.pgm ...");
-	fprintf(stderr,"\nExtracting BIC ... ");
-	fvBIC1 = BIC_ExtractionAlgorithm(cimg1);
-	WriteFeatureVector1D(fvBIC1, "results/bic_corel-guards.txt");
+	FeatureVector1D	*fvMS1 = NULL,*fvSS1 = NULL;
+	FeatureVector1D **fractals, **saliences;
+	fractals = calloc(1400,sizeof(FeatureVector1D*));
+	saliences = calloc(1400,sizeof(FeatureVector1D*));
 
-	fprintf(stderr,"\nExtracting MomentsInvariant ... ");
-	fvMoments1 = MomentInvariant_ExtractionAlgorithm(img1);
-	WriteFeatureVector1D(fvMoments1, "results/moments_mpeg7-bat.txt");
+	// Diretorio com o dataset
+	dir_name = argv[1];
+	
 
-	fprintf(stderr,"\nExtracting Fourier Descriptor ... ");
-	fvFourier1 = FourierDescriptor_ExtractionAlgorithm(img1);
-	WriteFeatureVector1D(fvFourier1, "results/fourier_mpeg7-bat.txt");
 
-	fprintf(stderr,"\nExtracting BAS ... ");
-	fvBAS1 = BAS_ExtractionAlgorithm(img1, 0, 0);
-	WriteFeatureVector1D(fvBAS1, "results/bas_mpeg7-bat.txt");
+	// Gera os fractais e as saliencias
+	while(getline(&filename, &len, stdin) != EOF){
+		// Bruxaria pra pegar o nome da imagem
+		filename[strlen(filename)-1] = '\0';
+		strcpy(name[i], filename);
+		strcpy(aux_file,dir_name);
+		strcat(aux_file, "/");
+		strcat(aux_file, filename);
+		printf("%s\n", aux_file);
 
-	fprintf(stderr,"\nExtracting Tensor Scale ... ");
-	fvTensor1 = TensorScale_ExtractionAlgorithm(img1);
-	WriteFeatureVector1D(fvTensor1, "results/tensorscale_mpeg7-bat.txt");
+		// Le a imagem
+		img1 = ReadImage(aux_file);
 
-	fprintf(stderr,"\nExtracting Multiscale Fractal Dimension ... ");
-	fvMS1 = MS_ExtractionAlgorithm(img1);
-	WriteFeatureVector1D(fvMS1, "results/multiscale_mpeg7-bat.txt");
+		// Calcula os fractais
+		fvMS1 = MS_ExtractionAlgorithm(img1);
+		fractals[i] = fvMS1;
 
-	fprintf(stderr,"\nExtracting Contour Saliences ... ");
-	fvCS1 = CS_ExtractionAlgorithm(img1);
-	WriteFeatureVector2D(fvCS1, "results/contoursaliences_mpeg7-bat.txt");
+		//Calcula as saliencias
+		fvSS1 = SS_ExtractionAlgorithm(img1);
+		saliences[i] = fvSS1;
 
-	fprintf(stderr,"\nExtracting Segment Saliences ... ");
-	fvSS1 = SS_ExtractionAlgorithm(img1);
-	WriteFeatureVector1D(fvSS1, "results/segmentsaliences_mpeg7-bat.txt");
+		DestroyImage(&img1);
+		i++;
+		printf("i: %d\n", i);
+	}
 
-	fprintf(stderr,"\n\nExtracting features from corel-locomotive.ppm and mpeg7-bird.pgm ...");
-	fprintf(stderr,"\nExtracting BIC ... ");
-	fvBIC2 = BIC_ExtractionAlgorithm(cimg2);
-	WriteFeatureVector1D(fvBIC2, "results/bic_corel-locomotive.txt");
+	fractals_file = fopen(argv[2],"w");
+	saliences_file = fopen(argv[3],"w");
 
-	fprintf(stderr,"\nExtracting MomentsInvariant ... ");
-	fvMoments2 = MomentInvariant_ExtractionAlgorithm(img2);
-	WriteFeatureVector1D(fvMoments2, "results/moments_mpeg7-bird.txt");
+	n = 1400;
+	for(i=atoi(argv[4]);i<atoi(argv[5]);i++){
+		// Calcula a distancia par a par
+		double max_frac = 0;
+		double max_sal = 0;
+		for(j=0;j<n;j++){
+			distances[j].name = name[j];
+			if(been[i][j]){
+				distances[j] = distmat[i][j];
+			}else{
+				been[i][j] = true;
+				distances[j].fractals_dist = MS_DistanceAlgorithm(fractals[i], fractals[j]);
+				distances[j].salience_dist = SS_DistanceAlgorithm(saliences[i], saliences[j]);
+				distmat[i][j] = distmat[j][i] = distances[j];
+			}
+			
+			if(distances[j].fractals_dist > max_frac)
+				max_frac = distances[j].fractals_dist;
+			if(distances[j].salience_dist > max_sal)
+				max_sal = distances[j].salience_dist;
+		}
 
-	fprintf(stderr,"\nExtracting Fourier Descriptor ... ");
-	fvFourier2 = FourierDescriptor_ExtractionAlgorithm(img2);
-	WriteFeatureVector1D(fvFourier2, "results/fourier_mpeg7-bird.txt");
+		// Escreve as distancias num vetor de strings
+		for(j=0;j<n;j++){
+			fprintf(fractals_file, "%s Q0 %s %d %lf STANDARD\n", name[i], distances[j].name, i*n + j, 1.0-(distances[j].fractals_dist/max_frac));
+		}
+		for(j=0;j<n;j++){
+			fprintf(saliences_file, "%s Q0 %s %d %lf STANDARD\n", name[i], distances[j].name, i*n + j, 1.0-(distances[j].salience_dist/max_sal));	
+		}
+	}
 
-	fprintf(stderr,"\nExtracting BAS ... ");
-	fvBAS2 = BAS_ExtractionAlgorithm(img2, 0, 0);
-	WriteFeatureVector1D(fvBAS2, "results/bas_mpeg7-bird.txt");
-
-	fprintf(stderr,"\nExtracting Tensor Scale ... ");
-	fvTensor2 = TensorScale_ExtractionAlgorithm(img2);
-	WriteFeatureVector1D(fvTensor2, "results/tensorscale_mpeg7-bird.txt");
-
-	fprintf(stderr,"\nExtracting Multiscale Fractal Dimension ... ");
-	fvMS2 = MS_ExtractionAlgorithm(img2);
-	WriteFeatureVector1D(fvMS2, "results/multiscale_mpeg7-bird.txt");
-
-	fprintf(stderr,"\nExtracting Contour Saliences ... ");
-	fvCS2 = CS_ExtractionAlgorithm(img2);
-	WriteFeatureVector2D(fvCS2, "results/contoursaliences_mpeg7-bird.txt");
-
-	fprintf(stderr,"\nExtracting Segment Saliences ... ");
-	fvSS2 = SS_ExtractionAlgorithm(img2);
-	WriteFeatureVector1D(fvSS2, "results/segmentsaliences_mpeg7-bird.txt");
-	fprintf(stderr,"%lf",CS_DistanceAlgorithm(fvCS1, fvCS2));
-
-	DestroyCImage(&cimg1);	DestroyImage(&img1);
-	DestroyCImage(&cimg2);	DestroyImage(&img2);
-	DestroyFeatureVector1D(&fvBIC1); DestroyFeatureVector1D(&fvBIC2);
-	DestroyFeatureVector1D(&fvMoments1); DestroyFeatureVector1D(&fvMoments2);
-	DestroyFeatureVector1D(&fvFourier1); DestroyFeatureVector1D(&fvFourier2);
-	DestroyFeatureVector1D(&fvBAS1); DestroyFeatureVector1D(&fvBAS2);
-	DestroyFeatureVector1D(&fvTensor1); DestroyFeatureVector1D(&fvTensor2);
-	DestroyFeatureVector1D(&fvMS1); DestroyFeatureVector1D(&fvMS2);
-	DestroyFeatureVector2D(&fvCS1); DestroyFeatureVector2D(&fvCS2);
-	DestroyFeatureVector1D(&fvSS1); DestroyFeatureVector1D(&fvSS2);
-
-	fprintf(stderr,"\n");
+	// for(j=0;j<n;j++){
+	// 	fprintf(fractals_file, "%s", output_fractals[j]);	
+	// }
+	// for(j=0;j<n;j++){
+	// 	fprintf(saliences_file, "%s", output_saliences[j]);	
+	// }
+	fclose(fractals_file);
+	fclose(saliences_file);
 
 	return 0;
 }
